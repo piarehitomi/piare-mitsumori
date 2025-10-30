@@ -1,0 +1,558 @@
+<index html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>株式会社ピアレキタガワ 見積書作成（印刷基準版 v7.3.1R PrintPro / ipad-ops r3）</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{ --ink:#111; --muted:#666; --line:#ddd; }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{ font-family:"BIZ UDPGothic", system-ui, -apple-system, "Hiragino Kaku Gothic ProN","Yu Gothic", Meiryo, sans-serif; color:var(--ink); margin:0; background:#fff;}
+  .sheet{ width:210mm; min-height:297mm; padding:14mm 16mm; margin:0 auto; }
+  header{ display:flex; justify-content:space-between; align-items:flex-start; gap:10mm; margin-bottom:6mm; }
+
+  /* 左＝宛名 */
+  .to-block{ flex:1 1 auto; }
+  .to-label{font-size:12px; color:var(--muted); margin-bottom:2mm;}
+  .to-address{ font-size:12.5px; line-height:1.5; white-space:pre-wrap; margin-bottom:2mm; }
+  .to-name-line{ position:relative; display:flex; align-items:baseline; gap:0; margin-bottom:2mm; flex-wrap:nowrap; }
+  .to-name{ font-weight:700; font-size:19px; letter-spacing:0.02em; width:auto !important; min-width:6ch; display:inline-block; }
+  .sama{font-size:16px; font-weight:700; margin-left:1mm;}
+  .to-tel{font-size:12.5px; color:#222;}
+
+  /* 右＝会社情報（ロゴ←→会社名を横並び） */
+  .from-block{ flex:0 0 92mm; }
+  .brand-row{
+    display:flex;
+    align-items:flex-start; /* ロゴを会社名と同じ高さから開始 */
+    gap:6mm;
+    justify-content:flex-end;
+  }
+  .logo{ width:34mm; flex:0 0 auto; margin-top:0.5mm; }
+  .logo img{ width:100%; height:auto; object-fit:contain; display:block; }
+  .company{ text-align:left; white-space:pre-line; margin:0; }
+  .company .name{ font-size:16px; font-weight:800; letter-spacing:0.02em; display:block; }
+  .company .addr, .company .tel{ font-size:12px; line-height:1.5; }
+
+  /* LINE：枠ナシ（ロゴの下に横並び） */
+  .line-wrap{ display:flex; gap:4mm; justify-content:flex-end; align-items:center; margin-top:2mm; }
+  .line-wrap img{ width:20mm; height:20mm; object-fit:contain; display:block; border:none; padding:0; background:transparent; }
+
+  .title{ text-align:left; font-size:22px; font-weight:700; margin:5mm 0 4mm 0; padding-bottom:2mm; border-bottom:2px solid var(--ink); letter-spacing:0.02em; }
+
+  table{ width:100%; border-collapse:collapse; }
+  th, td{ border:1px solid var(--line); padding:6px 8px; vertical-align:middle; font-size:12.5px; }
+  th{ background:#fafafa; text-align:center; font-weight:700; }
+  td.right{text-align:right;} td.center{text-align:center;}
+  .unit-badge{font-size:11px; color:var(--muted); margin-left:2px;}
+  .section-title{ font-weight:700; margin:8mm 0 2mm; font-size:14px; }
+
+  input[type="text"], input[type="number"]{ width:100%; font:inherit; padding:6px 8px; border:1px solid #ccc; background:#fff; }
+  input[type="number"]{ text-align:right; }
+  .money{ padding-right:8px; }
+
+  /* 数量（画面時は大きめでOK） */
+  .qty-input{
+    font-size:28px; padding:10px 8px; height:54px; line-height:1.1;
+    -webkit-appearance: none; appearance: textfield; min-width:70px;
+  }
+
+  /* 見積明細の列幅（画面時） */
+  #itemsTable th:nth-child(1){ width:36%; }
+  #itemsTable th:nth-child(2), #itemsTable td:nth-child(2){ width:8%; }
+  #itemsTable th:nth-child(4), #itemsTable td:nth-child(4){ width:23%; }
+
+  /* 追加工事テーブル列幅（画面時） */
+  #addTable th:nth-child(2), #addTable td:nth-child(2){ width:10%; }
+  #addTable th:nth-child(3), #addTable td:nth-child(3){ width:18%; }
+  #addTable th:nth-child(4), #addTable td:nth-child(4){ width:20%; }
+
+  .grand-amount{ font-weight:800; font-size:16px; padding-right:8px; }
+
+  .notes{ min-height:24mm; border:1px solid var(--line); padding:6px 8px; font-size:12.5px; background:#fff; }
+  .notes-fixed{ border:1px solid var(--line); padding:6px 8px; font-size:12.5px; background:#fff; margin-bottom:4mm; }
+  .fixed-text{ white-space:pre-wrap; line-height:1.6; }
+  .notes-free-wrap{ margin-top:2mm; }
+  .notes-label{ font-size:12px; color:var(--muted); margin:0 0 2mm; }
+
+  /* 画面用コントロール */
+  .controls{ position:sticky; top:0; background:#fff; border-bottom:1px solid #eee; padding:10px 12px; display:flex; gap:8px; align-items:center; z-index:5; }
+  .controls .pill{ border-radius:999px; padding:6px 12px; font-size:12.5px; background:#f6f6f6; border:1px solid #e5e5e5; }
+
+  /* 追加工事：ボタンパッド */
+  .add-buttons{ display:grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap:8px; }
+  .add-btn{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px; padding:10px 12px; border:1px solid #ccc; background:#fff; cursor:pointer; border-radius:10px;
+    font-size:13px;
+  }
+  .add-btn .name{ flex:1 1 auto; text-align:left; }
+  .add-btn .unit{ font-variant-numeric: tabular-nums; }
+
+  .pad-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; }
+  .pad-row input[type="number"]{ width:90px; }
+
+  /* 下部：印刷開始ボタン */
+  .footer-print{ margin:10mm 0 0; display:flex; justify-content:flex-end; }
+  .footer-print button{ font:inherit; padding:10px 16px; border:1px solid #ccc; background:#fff; cursor:pointer; border-radius:10px; }
+
+  /* 印刷最適化 */
+  @page{ size:A4; margin:12mm; }
+  @media print{
+    .controls, .add-buttons, .pad-row, .footer-print{ display:none !important; }
+    body{ background:#fff; }
+    .sheet{ padding:0; width:auto; min-height:auto; }
+    input{ border:none !important; padding:0 !important; margin:0 !important; outline:none !important; background:none !important; }
+
+    /* ▼ 行間＆余白をさらに圧縮（1枚収まり優先） */
+    th, td{
+      padding:3px 4px !important;
+      font-size:11.2px !important;
+      line-height:1.18 !important;
+      border-width:0.8px !important;
+    }
+    header{ margin-bottom:2.6mm !important; gap:5mm !important; }
+    .title{ margin:2.6mm 0 1.8mm 0 !important; padding-bottom:1mm !important; }
+    .section-title{ margin:4mm 0 1mm !important; }
+
+    /* ① 数量のフォントを金額と同じサイズに統一 */
+    .qty-input{
+      font-size:11.2px !important;
+      height:auto !important;
+      line-height:1.18 !important;
+      padding:3px 4px !important;
+      min-width:auto !important;
+    }
+
+    /* 宛名の「お客様」ラベルは印刷非表示 */
+    .to-label{ display:none !important; }
+
+    /* 宛名：「様」は名前の最後の文字から15mm右に配置 */
+    .to-name-line{ position:relative !important; }
+    .to-name{ font-size:26px !important; font-weight:800; width:auto !important; }
+    .sama{
+      font-size:22px !important; font-weight:800;
+      position:absolute !important; left:auto; top:auto;
+      margin:0 !important; white-space:nowrap;
+    }
+
+    /* 追加工事：操作列を非表示（ヘッダ＋各行） */
+    #addTable th:nth-child(5),
+    #addTable td:nth-child(5){ display:none !important; }
+
+    /* ② 合計金額のフォントサイズを 32px → 約21.33px（=2/3）へ縮小 */
+    .grand-amount{ font-size:21.33px !important; }
+
+    /* ③ 「備考メモ（自由入力）」は印刷時は丸ごと非表示 */
+    .notes-free-wrap{ display:none !important; }
+
+    /* LINEロゴ：会社情報の直下に“5mm”余白で配置 */
+    .line-wrap{ margin-top:5mm !important; }
+
+    /* LINE画像の枠なし（念押し） */
+    .line-wrap img{ border:none !important; padding:0 !important; background:transparent !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="controls" role="toolbar" aria-label="操作">
+  <span class="pill">標準取付工事 台数：
+    <button onclick="chgStd(-1)">－</button>
+    <strong id="stdCount" style="display:inline-block; min-width:2ch; text-align:center;">1</strong>
+    <button onclick="chgStd(1)">＋</button>
+  </span>
+  <span class="pill">合計（税込）：<strong id="grandTotal">¥0</strong></span>
+</div>
+
+<div class="sheet">
+
+  <header>
+    <!-- 左：宛名 -->
+    <section class="to-block">
+      <div class="to-label">お客様</div>
+      <div>
+        <div class="to-address"><input id="toAddress" type="text" placeholder="〒 住所を入力" /></div>
+        <div class="to-name-line">
+          <input id="toName" class="to-name" type="text" placeholder="お名前" />
+          <span class="sama">様</span>
+        </div>
+        <div class="to-tel">TEL：<input id="toTel" type="text" placeholder="お電話番号" style="width:50%;" /></div>
+      </div>
+    </section>
+
+    <!-- 右：ロゴ ←→ 会社情報（画像の並び） -->
+    <section class="from-block">
+      <div class="brand-row">
+        <div class="logo">
+          <img id="logoImg" alt="PIARE KITAGAWA LOGO" src="piarelogo.png" />
+        </div>
+        <div class="company">
+<span class="name">株式会社ピアレキタガワ</span>
+<span class="addr">長浜市曽根町350</span>
+<span class="tel">TEL：0749-72-2406</span>
+        </div>
+      </div>
+      <div class="line-wrap" aria-label="LINE 連絡先">
+        <img src="lineligo.png" alt="LINE ロゴ">
+        <img src="lineqrcode.png" alt="LINE QRコード">
+      </div>
+    </section>
+  </header>
+
+  <div class="title">お見積書</div>
+
+  <!-- 見積明細 -->
+  <div class="section-title">見積明細（エアコン本体 ほか）</div>
+  <table id="itemsTable" aria-label="見積明細">
+    <thead>
+      <tr>
+        <th>品名・型番</th>
+        <th>数量<span class="unit-badge">（台）</span></th>
+        <th>単価（税込）</th>
+        <th>金額（税込）</th>
+        <th>備考</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" placeholder="例）ルームエアコン CS-XXXX" oninput="recalc()"></td>
+        <td class="center"><input class="qty-input" type="number" min="0" step="1" value="0" oninput="recalc()"></td>
+        <td class="right money"><input type="number" min="0" step="100" value="0" oninput="recalc()"></td>
+        <td class="right money"><span class="rowTotal">¥0</span></td>
+        <td><input type="text" placeholder=""></td>
+      </tr>
+      <tr>
+        <td><input type="text" oninput="recalc()"></td>
+        <td class="center"><input class="qty-input" type="number" min="0" step="1" value="0" oninput="recalc()"></td>
+        <td class="right money"><input type="number" min="0" step="100" value="0" oninput="recalc()"></td>
+        <td class="right money"><span class="rowTotal">¥0</span></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" oninput="recalc()"></td>
+        <td class="center"><input class="qty-input" type="number" min="0" step="1" value="0" oninput="recalc()"></td>
+        <td class="right money"><input type="number" min="0" step="100" value="0" oninput="recalc()"></td>
+        <td class="right money"><span class="rowTotal">¥0</span></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" oninput="recalc()"></td>
+        <td class="center"><input class="qty-input" type="number" min="0" step="1" value="0" oninput="recalc()"></td>
+        <td class="right money"><input type="number" min="0" step="100" value="0" oninput="recalc()"></td>
+        <td class="right money"><span class="rowTotal">¥0</span></td>
+        <td><input type="text"></td>
+      </tr>
+      <tr>
+        <td><input type="text" oninput="recalc()"></td>
+        <td class="center"><input class="qty-input" type="number" min="0" step="1" value="0" oninput="recalc()"></td>
+        <td class="right money"><input type="number" min="0" step="100" value="0" oninput="recalc()"></td>
+        <td class="right money"><span class="rowTotal">¥0</span></td>
+        <td><input type="text"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 標準取付工事費 -->
+  <div class="section-title">標準取付工事費</div>
+  <table aria-label="標準取付工事費">
+    <thead>
+      <tr>
+        <th>内容</th>
+        <th style="width:10%;">台数<span class="unit-badge">（台）</span></th>
+        <th style="width:16%;">単価（税込）</th>
+        <th style="width:16%;">金額（税込）</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>標準取付工事費</td>
+        <td class="center"><input id="stdQty" class="qty-input" type="number" min="0" step="1" value="1" oninput="recalc()"></td>
+        <td class="right money">¥<span id="stdUnit">22,000</span></td>
+        <td class="right money">¥<span id="stdTotal">22,000</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 追加工事：iPad向けボタンパッド -->
+  <div class="section-title">追加工事</div>
+
+  <div class="add-pad-wrap">
+    <div class="pad-row">
+      <input id="addSearch" type="text" placeholder="絞り込み（例：開口／置台／配管）" oninput="renderButtons()" style="flex:1 1 260px;">
+      <label style="display:flex; align-items:center; gap:6px;">数量
+        <input id="padQty" class="qty-input" type="number" min="1" step="1" value="1">
+      </label>
+    </div>
+    <div id="addButtons" class="add-buttons" aria-label="追加工事ボタン一覧"></div>
+  </div>
+
+  <!-- 追加工事テーブル -->
+  <table id="addTable" aria-label="追加工事">
+    <thead>
+      <tr>
+        <th>項目</th>
+        <th>数量</th>
+        <th>単価（税込）</th>
+        <th>金額（税込）</th>
+        <th class="btn-inline" style="width:10%;">操作</th>
+      </tr>
+    </thead>
+    <tbody><!-- JSで行が追加される --></tbody>
+  </table>
+
+  <!-- 合計 -->
+  <div class="section-title">合計</div>
+  <table aria-label="合計">
+    <tbody>
+      <tr>
+        <th style="width:68%;">合計（税込）</th>
+        <td class="right money" style="width:32%;"><span class="grand-amount">¥<span id="grandTotalBottom">0</span></span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 備考（[化粧カバー]のみ） -->
+  <div class="section-title">備考</div>
+  <div class="notes-fixed" aria-label="固定のご案内">
+    <div class="fixed-text">
+[化粧カバー]
+カラー／　アイボリー・ブラウン・グレー・ブラック
+サイズ／　60　・　80
+    </div>
+  </div>
+  <!-- 自由入力メモは画面では残し、印刷時は非表示 -->
+  <div class="notes-free-wrap">
+    <div class="notes-label">備考メモ（自由入力）</div>
+    <div class="notes" id="notes" contenteditable="true" data-empty="1" aria-label="備考メモ（自由入力）"></div>
+  </div>
+
+  <!-- 一番下：印刷開始ボタン（印刷時は自動で非表示） -->
+  <div class="footer-print">
+    <button onclick="window.print()">🖨 印刷開始</button>
+  </div>
+
+</div>
+
+<script>
+  const fmt = (n)=> n.toLocaleString('ja-JP');
+  function parseNum(val){
+    if(val == null) return 0;
+    const s = String(val).replace(/[¥￥円,\s]/g,'')
+      .replace(/[Ａ-Ｚａ-ｚ０-９．]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    const n = Number(s); return isNaN(n) ? 0 : n;
+  }
+  const pxPerMm = 96 / 25.4; // CSS px換算
+
+  function makeAddRow(data={}){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${data.item ?? ''}" oninput="recalc()"></td>
+      <td class="center"><input class="qty-input" type="number" min="0" step="1" value="${data.qty ?? 0}" oninput="recalc()"></td>
+      <td class="right money"><input type="number" min="0" step="100" value="${data.unit ?? 0}" oninput="recalc()"></td>
+      <td class="right money"><span class="addRowTotal">¥0</span></td>
+      <td class="row-actions btn-inline">
+        <button onclick="dupAddRow(this)">複製</button>
+        <button onclick="delAddRow(this)">削除</button>
+      </td>`;
+    return tr;
+  }
+  function addAddRow(data){ 
+    const tb = document.getElementById('addTable').tBodies[0];
+    tb.appendChild(makeAddRow(data||{})); recalc();
+  }
+  function dupAddRow(btn){
+    const tr = btn.closest('tr');
+    const vals = [...tr.querySelectorAll('input')].map(i=>i.value);
+    addAddRow({item:vals[0], qty:parseNum(vals[1]), unit:parseNum(vals[2])});
+  }
+  function delAddRow(btn){
+    const tr = btn.closest('tr');
+    tr.parentElement.removeChild(tr); recalc();
+  }
+
+  const ADD_MASTER = [
+    { name:"家電リサイクル処理費", unit:3190 },
+    { name:"基本工事（配管3mまで）", unit:22000 },
+    { name:"基本工事（2分4分・配管3mまで）", unit:33000 },
+    { name:"開口工事", unit:3300 },
+    { name:"開口工事（コンクリート、特殊壁）", unit:5500 },
+    { name:"配管延長（1m）", unit:4400 },
+    { name:"屋内配管耐熱施工", unit:5500 },
+    { name:"コンセント電圧変更", unit:2200 },
+    { name:"ブレーカー増設", unit:3300 },
+    { name:"100V／200V切替工事", unit:3300 },
+    { name:"配管カバーなし", unit:-5500 },
+    { name:"ホールキャップ", unit:1500 },
+    { name:"和室用たて桟", unit:2200 },
+    { name:"平地置台（C-NG）", unit:9980 },
+    { name:"平地置台（大）（C-NG-L）", unit:11000 },
+    { name:"屋根傾斜置台（C-YG）", unit:7980 },
+    { name:"壁掛置台（C-KG）", unit:8980 },
+    { name:"壁掛置台（大）（C-KG-L）", unit:9980 },
+    { name:"2段置台（C-WG）", unit:20000 },
+    { name:"2段置台（大）（C-WG-L）", unit:23000 },
+    { name:"傾斜屋根直角置用（C-LG）", unit:11000 },
+    { name:"専用コンセント工事（現場により）　～", unit:12000 },
+    { name:"高所壁掛設置（現場により）　～", unit:5500 },
+    { name:"エアコン取り外しのみ（現場により）　～", unit:5500 },
+  ];
+
+  function renderButtons(){
+    const wrap = document.getElementById('addButtons');
+    const q = (document.getElementById('addSearch').value || '').trim().toLowerCase();
+    const list = q ? ADD_MASTER.filter(it => it.name.toLowerCase().includes(q)) : ADD_MASTER;
+    wrap.innerHTML = '';
+    list.forEach((it)=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'add-btn';
+      btn.title = 'タップで追加';
+      btn.innerHTML = `<span class="name">${it.name}</span><span class="unit">¥${fmt(it.unit)}</span>`;
+      btn.onclick = ()=>{
+        const qty = Math.max(1, parseNum(document.getElementById('padQty').value || 1));
+        addAddRow({ item: it.name, qty, unit: it.unit });
+      };
+      wrap.appendChild(btn);
+    });
+  }
+
+  function recalc(){
+    let sum = 0;
+    // 見積明細
+    let itemsTable = document.getElementById('itemsTable').tBodies[0];
+    for(let r of itemsTable.rows){
+      const qty = Number(r.cells[1].querySelector('input').value || 0);
+      const price = Number(r.cells[2].querySelector('input').value || 0);
+      const rowTotal = qty * price;
+      r.cells[3].querySelector('.rowTotal').textContent = '¥' + fmt(rowTotal);
+      sum += rowTotal;
+    }
+    // 標準取付工事
+    const unit = 22000;
+    const q = Math.max(0, Number(document.getElementById('stdQty').value || 0));
+    const stdTotal = unit * q;
+    document.getElementById('stdUnit').textContent = fmt(unit);
+    document.getElementById('stdTotal').textContent = fmt(stdTotal);
+    sum += stdTotal;
+    // 追加工事
+    const addTb = document.getElementById('addTable').tBodies[0];
+    for(let r of addTb.rows){
+      const qty = parseNum(r.cells[1].querySelector('input').value || 0);
+      const price = parseNum(r.cells[2].querySelector('input').value || 0);
+      const total = qty * price;
+      r.cells[3].querySelector('.addRowTotal').textContent = '¥' + fmt(total);
+      sum += total;
+    }
+    document.getElementById('grandTotal').textContent = '¥' + fmt(sum);
+    document.getElementById('grandTotalBottom').textContent = fmt(sum);
+  }
+
+  function chgStd(delta){
+    const el = document.getElementById('stdQty');
+    let v = Number(el.value || 0) + delta;
+    if(v < 0) v = 0;
+    el.value = v;
+    document.getElementById('stdCount').textContent = v;
+    recalc();
+  }
+
+  function updateNotesEmpty(){
+    const notes = document.getElementById('notes');
+    const wrap  = document.querySelector('.notes-free-wrap');
+    if(!notes || !wrap) return;
+    const text = notes.innerText.replace(/\s/g,'');
+    wrap.classList.toggle('hide-print', text.length === 0);
+  }
+
+  let prunedCache = null;
+  function pruneEmptyRows(){
+    const tbody = document.getElementById('itemsTable').tBodies[0];
+    prunedCache = Array.from(tbody.rows).map(r=>r.cloneNode(true));
+    const rows = Array.from(tbody.rows); rows.forEach(r=>r.remove());
+    prunedCache.forEach(r=>{
+      const name = (r.cells[0].querySelector('input').value || '').trim();
+      const qty  = Number(r.cells[1].querySelector('input').value || 0);
+      if(name && qty>0){ tbody.appendChild(r); }
+    });
+  }
+  function restoreRows(){
+    if(!prunedCache) return;
+    const tbody = document.getElementById('itemsTable').tBodies[0];
+    tbody.innerHTML = '';
+    prunedCache.forEach(r=>tbody.appendChild(r));
+    prunedCache = null;
+  }
+
+  /* --- 「様」を名前の最後の文字から“15mm”右に配置（印刷直前に計測） --- */
+  function placeSama1cmRight(){ // 関数名は互換のため据え置き
+    const line = document.querySelector('.to-name-line');
+    const nameInput = document.getElementById('toName');
+    const sama = document.querySelector('.sama');
+    if(!line || !nameInput || !sama) return;
+
+    // 入力文字の実幅を計測（同フォントの仮spanで測る）
+    const cs = window.getComputedStyle(nameInput);
+    const span = document.createElement('span');
+    span.style.position = 'absolute';
+    span.style.visibility = 'hidden';
+    span.style.whiteSpace = 'pre';
+    span.style.fontFamily = cs.fontFamily;
+    span.style.fontSize = cs.fontSize;
+    span.style.fontWeight = cs.fontWeight;
+    span.textContent = nameInput.value || '';
+    document.body.appendChild(span);
+    const textW = span.getBoundingClientRect().width;
+    span.remove();
+
+    const lineRect = line.getBoundingClientRect();
+    const nameRect = nameInput.getBoundingClientRect();
+    const offsetPx = 15 * (96 / 25.4); // 15mm
+
+    // 入力欄の左端 + 文字幅 + 15mm
+    const leftWithinLine = (nameRect.left - lineRect.left) + textW + offsetPx;
+
+    sama.style.position = 'absolute';
+    sama.style.left = leftWithinLine + 'px';
+    sama.style.top  = (nameRect.top - lineRect.top) + 'px';
+  }
+
+  /* イベント */
+  window.addEventListener('DOMContentLoaded', ()=>{
+    recalc();
+    document.getElementById('stdCount').textContent = document.getElementById('stdQty').value;
+    addAddRow({item:'', qty:0, unit:0});   // 初期空行
+    renderButtons();
+    updateNotesEmpty();
+    const notes = document.getElementById('notes');
+    if(notes){ notes.addEventListener('input', updateNotesEmpty); }
+  });
+
+  if(window.matchMedia){
+    const mm = window.matchMedia('print');
+    if(mm && mm.addEventListener){
+      mm.addEventListener('change', e => {
+        if(e.matches){ updateNotesEmpty(); pruneEmptyRows(); placeSama1cmRight(); }
+        else{ restoreRows();
+          const sama = document.querySelector('.sama');
+          if(sama){ sama.style.position=''; sama.style.left=''; sama.style.top=''; }
+        }
+      });
+    }
+  }
+  window.onbeforeprint = ()=>{ updateNotesEmpty(); pruneEmptyRows(); placeSama1cmRight(); };
+  window.onafterprint  = ()=>{ restoreRows();
+    const sama = document.querySelector('.sama');
+    if(sama){ sama.style.position=''; sama.style.left=''; sama.style.top=''; }
+  };
+</script>
+
+</body>
+</html>
+
